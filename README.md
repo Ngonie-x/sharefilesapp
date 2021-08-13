@@ -12,6 +12,10 @@ A mobile application making use of the python sockets library to share files bet
 - connecting to a server
 - sending and receiving files between a server and a client
 
+## Usage
+If you want to receive the file. Click the copy icon, it will automatically copy your ip address which you can send to your friend.
+Click the file icon with the down arrow to start the server. Your friend can copy the address you sent, click the file icon with the right facing arrow, paste the IP address in the dialog box that appears and click the send files button. This will open the filemanager. Now they can select the file they want to sent just like that, it begins sending.
+
 
 ## Interface
 
