@@ -1,0 +1,124 @@
+#:import Clipboard kivy.core.clipboard.Clipboard
+
+MDBoxLayout:
+    orientation: "vertical"
+
+    MDToolbar:
+        title: "Share Files"
+        right_action_items: [["file-send", lambda x: app.show_recipient_dialog()], ["file-download", lambda x: app.create_server()]]
+
+
+    MDBottomNavigation:
+        id: bottomnav
+        # panel_color: .2, .2, .2, 1
+
+        MDBottomNavigationItem:
+            name: 'home'
+            text: 'Home'
+            icon: 'home-heart'
+
+            MDList:
+                pos_hint: {'y': .8}
+                size_hint_y: .2
+                TwoLineAvatarIconListItem:
+                    id: ipaddress
+                    text: "Your Address"
+
+                    IconLeftWidget:
+                        icon: "satellite-uplink"
+
+                    IconRightWidget:
+                        icon: "content-copy"
+                        on_release:
+                            # app.get_ip() 
+                            Clipboard.copy(ipaddress.secondary_text)
+                            app.toast_ip()
+
+                ThreeLineAvatarIconListItem:
+                    id: details_item
+                    text: "Details"
+
+                    IconLeftWidget:
+                        icon: "details"
+
+
+
+
+
+
+
+
+
+        MDBottomNavigationItem:
+            name: 'filesharing'
+            text: 'File Sharing'
+            icon: 'folder-download'
+
+            MDBoxLayout:
+                pos_hint: {"y": .85}
+                orientation: 'vertical'
+                padding: "10dp"
+                size_hint_y: None
+                height: "70dp"
+
+
+
+                MDLabel:
+                    id: reception
+                    text: "Waiting for Action"
+
+                MDProgressBar:
+                    id: progress
+
+            MDLabel:
+                id: sentreceived
+                pos_hint: {'y':.3}
+            
+            MDBoxLayout:
+                id: box
+                size_hint: 1, .65
+                orientation: 'vertical'
+                spacing: "12dp"
+                 
+                pos_hint: {'y':.1}
+                # md_bg_color: app.theme_cls.accent_color
+                orientation: 'vertical'
+
+                
+
+                ScrollView:
+                    # pos_hint: {'center_x': .5, 'y': .38}
+                    size_hint: 1, 1
+                    MDList:
+                        id: received
+
+        
+
+    
+
+
+<DialogContent>:
+    orientation: 'vertical'
+    spacing: '12dp'
+    size_hint_y: None
+    height: "100dp"
+
+    MDTextField:
+        id: receiveraddress
+        hint_text: "Enter Recipient Address"
+        mode: 'rectangle'
+
+
+    MDBoxLayout:
+        spacing: '12dp'
+        MDRectangleFlatButton:
+            text: "Select File"
+            on_release: 
+                app.file_manager_open()
+                app.close_dialog()
+                app.receiver_ipaddress(receiveraddress.text)
+
+        MDRectangleFlatButton:
+            text: "Cancel"
+            on_release: app.close_dialog()
+
