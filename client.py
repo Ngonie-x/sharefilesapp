@@ -6,7 +6,6 @@ import os
 from kivymd.toast import toast
 
 
-
 class Client:
     def __init__(self, host, port, filename, progressbar, file_sent):
         self.host = host
@@ -18,14 +17,15 @@ class Client:
         self.progressbar = progressbar
         self.files_sent = file_sent
 
-    def connect(self):
+    def connect(self, dt):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Connecting to the server...")
         self.skt.connect((self.host, self.port))
         print("Connected")
 
-        #send the filename and the filesize
-        self.skt.send(f"{os.path.basename(self.filename)}{self.SEPARATOR}{self.filesize}".encode())
+        # send the filename and the filesize
+        self.skt.send(
+            f"{os.path.basename(self.filename)}{self.SEPARATOR}{self.filesize}".encode())
 
         self.send_file()
 
@@ -49,17 +49,15 @@ class Client:
 
         self.skt.close()
         print("Done")
-        
+
         with shelve.open('./save_files/mydata') as shef_file:
             filessent = shef_file['files_sent']
             filessent = str(int(filessent) + 1)
             shef_file['files_sent'] = filessent
 
         self.files_sent.secondary_text = '[b]Files Sent:[/b]' + filessent
-        
 
     def update_progress(self, bytes_len):
         '''update the progress bar in the UI'''
         bar_value = int((bytes_len/self.filesize)*100)
         self.progressbar.value = bar_value
-

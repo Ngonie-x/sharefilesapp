@@ -45,7 +45,7 @@ class Server:
         self.savedlbl = saved_in_label
         self.filelocation = file_location_scroll
 
-    def start_server(self):
+    def start_server(self, dt):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # bind the socket to our local address

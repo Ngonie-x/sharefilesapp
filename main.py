@@ -2,7 +2,7 @@ import shelve
 import server
 import client
 import socket
-from threading import Thread
+from kivy.clock import Clock
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
@@ -103,9 +103,7 @@ class MainApp(MDApp):
         self.new_server = server.Server(self.root.ids.progress, self.root.ids.reception,
                                         self.root.ids.details_item, self.root.ids.sentreceived, self.root.ids.received)
         try:
-            self.server_thread = Thread(target=self.new_server.start_server)
-            self.server_thread.daemon = True
-            self.server_thread.start()
+            Clock.schedule_once(self.new_server.start_server)
             toast("Server started")
         except Exception as e:
             toast(e)
@@ -171,9 +169,7 @@ class MainApp(MDApp):
             self.root.ids.reception.text = f"Sending: {os.path.basename(path)}"
             self.new_client = client.Client(
                 self.receiveraddress, 5001, path, self.root.ids.progress, self.root.ids.details_item)
-            self.client_thread = Thread(target=self.new_client.connect)
-            self.client_thread.daemon = True
-            self.client_thread.start()
+            Clock.schedule_once(self.new_client.connect)
         except Exception as e:
             toast(e)
             with open('myerrorlog.txt', 'w') as f:
