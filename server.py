@@ -1,16 +1,23 @@
 # server.py
 from kivymd.uix.list import OneLineListItem
-import socket, os, shelve
+import socket
+import os
+import shelve
 from kivymd.toast import toast
+from kivy.utils import platform
 
+if platform == 'android':
 
-from android.storage import secondary_external_storage_path
-secondary_ext_storage = secondary_external_storage_path()
+    from android.storage import secondary_external_storage_path
+    secondary_ext_storage = secondary_external_storage_path()
 
-import android
-from android.permissions import request_permissions, Permission
-request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE, Permission.ACCESS_NETWORK_STATE, Permission.INTERNET])
+    import android
+    from android.permissions import request_permissions, Permission
+    request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE,
+                        Permission.ACCESS_NETWORK_STATE, Permission.INTERNET])
 
+else:
+    secondary_ext_storage = os.getcwd()
 
 
 def get_server_host():
@@ -22,7 +29,7 @@ def get_server_host():
     except Exception:
         IP = '127.0.0.1'
     finally:
-        s.close()        
+        s.close()
     return IP
 
 
@@ -38,18 +45,16 @@ class Server:
         self.savedlbl = saved_in_label
         self.filelocation = file_location_scroll
 
-
     def start_server(self):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # bind the socket to our local address
         self.skt.bind((self.SERVER_HOST, self.SERVER_PORT))
 
-        #Enabling our server to listen to connections
+        # Enabling our server to listen to connections
         self.skt.listen(1)
         toast(f"Listening on {self.SERVER_HOST}:{self.SERVER_PORT}")
         print(f'[*] Listening as {self.SERVER_HOST}:{self.SERVER_PORT}')
-
 
         # ACCEPT connection if there are any
         client_socket, address = self.skt.accept()
@@ -57,9 +62,6 @@ class Server:
         # is sender connected
         print(f"[+] {address} is connected.")
         # toast(f"{address} is connected")
-
-
-
 
         # receive file info
         received = client_socket.recv(self.BUFFER_SIZE).decode()
@@ -70,11 +72,9 @@ class Server:
         # convert filesize to integer
         self.filesize = int(filesize)
 
-
         self.receive_the_file(client_socket, filename)
 
-
-    def receive_the_file(self, client_socket,filename):
+    def receive_the_file(self, client_socket, filename):
         print("Receiving file")
         self.downloaded = 0
         file_path = os.path.join(str(secondary_ext_storage), str(filename))
@@ -95,26 +95,20 @@ class Server:
                 self.downloaded += len(bytes_read)
                 self.update_progress(self.downloaded)
 
-        
         client_socket.close()
 
         self.skt.close()
 
-
         with shelve.open('./save_files/mydata') as shef_file:
             filesreceived = shef_file['files_received']
-            filesreceived = str(int(filesreceived)+ 1)
+            filesreceived = str(int(filesreceived) + 1)
             shef_file['files_received'] = filesreceived
 
-
         self.files_received.tertiary_text = '[b]Files Received:[/b]' + filesreceived
-
 
         saved_in_path = file_path
         self.savedlbl.text = "Saved In"
         self.filelocation.add_widget(OneLineListItem(text=saved_in_path))
-        
-
 
         toast("Done")
 
