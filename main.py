@@ -2,7 +2,8 @@ import shelve
 import server
 import client
 import socket
-from kivy.clock import Clock
+import asyncio
+import threading
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
@@ -103,7 +104,8 @@ class MainApp(MDApp):
         self.new_server = server.Server(self.root.ids.progress, self.root.ids.reception,
                                         self.root.ids.details_item, self.root.ids.sentreceived, self.root.ids.received)
         try:
-            Clock.schedule_once(self.new_server.start_server)
+            threading.Thread(target=self.new_server.start_server).start()
+            # await asyncio.to_thread(self.new_server.start_server())
             toast("Server started")
         except Exception as e:
             toast(e)
@@ -155,7 +157,7 @@ class MainApp(MDApp):
         self.file_manager.show(primary_ext_storage)
         self.manager_open = True
 
-    def select_path(self, path):
+    async def select_path(self, path):
         '''It will be called when you click on the file name
         or the catalog selection button.
 
@@ -169,7 +171,8 @@ class MainApp(MDApp):
             self.root.ids.reception.text = f"Sending: {os.path.basename(path)}"
             self.new_client = client.Client(
                 self.receiveraddress, 5001, path, self.root.ids.progress, self.root.ids.details_item)
-            Clock.schedule_once(self.new_client.connect)
+
+            await self.new_client.connect()
         except Exception as e:
             toast(e)
             with open('myerrorlog.txt', 'w') as f:

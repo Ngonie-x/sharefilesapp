@@ -5,6 +5,7 @@ import os
 import shelve
 from kivymd.toast import toast
 from kivy.utils import platform
+from kivy.clock import mainthread
 
 if platform == 'android':
 
@@ -45,7 +46,7 @@ class Server:
         self.savedlbl = saved_in_label
         self.filelocation = file_location_scroll
 
-    def start_server(self, dt):
+    def start_server(self):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         # bind the socket to our local address
@@ -53,7 +54,7 @@ class Server:
 
         # Enabling our server to listen to connections
         self.skt.listen(1)
-        toast(f"Listening on {self.SERVER_HOST}:{self.SERVER_PORT}")
+        self.display_server_toast()
         print(f'[*] Listening as {self.SERVER_HOST}:{self.SERVER_PORT}')
 
         # ACCEPT connection if there are any
@@ -67,7 +68,7 @@ class Server:
         received = client_socket.recv(self.BUFFER_SIZE).decode()
         filename, filesize = received.split(self.SEPARATOR)
 
-        self.reception_widget.text = filename
+        self.change_reception_widget_text(filename)
 
         # convert filesize to integer
         self.filesize = int(filesize)
@@ -78,7 +79,7 @@ class Server:
         print("Receiving file")
         self.downloaded = 0
         file_path = os.path.join(str(secondary_ext_storage), str(filename))
-        toast(f"{sdcard_path}{filename}")
+        self.display_file_toast(file_path)
         with open(file_path, "wb") as f:
             while True:
                 # read 1024 bytes from the socekt (receive)
@@ -104,6 +105,10 @@ class Server:
             filesreceived = str(int(filesreceived) + 1)
             shef_file['files_received'] = filesreceived
 
+        self.file_recieved_ui_changes(filesreceived, file_path)
+
+    @mainthread
+    def file_recieved_ui_changes(self, filesreceived, file_path):
         self.files_received.tertiary_text = '[b]Files Received:[/b]' + filesreceived
 
         saved_in_path = file_path
@@ -112,6 +117,19 @@ class Server:
 
         toast("Done")
 
+    @mainthread
+    def change_reception_widget_text(self, filename):
+        self.reception_widget.text = filename
+
+    @mainthread
+    def display_server_toast(self):
+        toast(f"Listening on {self.SERVER_HOST}:{self.SERVER_PORT}")
+
+    @mainthread
+    def display_file_toast(self, file_path):
+        toast(f"{file_path}")
+
+    @mainthread
     def update_progress(self, bytes_len):
         '''update the progress bar in the UI'''
         bar_value = int((bytes_len/self.filesize)*100)

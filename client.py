@@ -17,7 +17,7 @@ class Client:
         self.progressbar = progressbar
         self.files_sent = file_sent
 
-    def connect(self, dt):
+    async def connect(self):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Connecting to the server...")
         self.skt.connect((self.host, self.port))
@@ -27,9 +27,9 @@ class Client:
         self.skt.send(
             f"{os.path.basename(self.filename)}{self.SEPARATOR}{self.filesize}".encode())
 
-        self.send_file()
+        await self.send_file()
 
-    def send_file(self):
+    async def send_file(self):
         print("Sending File")
         toast(self.filename)
         self.sent = 0
@@ -45,7 +45,7 @@ class Client:
                 self.skt.sendall(bytes_read)
 
                 self.sent += len(bytes_read)
-                self.update_progress(self.sent)
+                await self.update_progress(self.sent)
 
         self.skt.close()
         print("Done")
@@ -57,7 +57,7 @@ class Client:
 
         self.files_sent.secondary_text = '[b]Files Sent:[/b]' + filessent
 
-    def update_progress(self, bytes_len):
+    async def update_progress(self, bytes_len):
         '''update the progress bar in the UI'''
         bar_value = int((bytes_len/self.filesize)*100)
         self.progressbar.value = bar_value
