@@ -4,6 +4,7 @@ import shelve
 import socket
 import os
 from kivymd.toast import toast
+from kivy.clock import mainthread
 
 
 class Client:
@@ -17,7 +18,7 @@ class Client:
         self.progressbar = progressbar
         self.files_sent = file_sent
 
-    async def connect(self):
+    def connect(self):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("Connecting to the server...")
         self.skt.connect((self.host, self.port))
@@ -25,13 +26,18 @@ class Client:
 
         # send the filename and the filesize
         self.skt.send(
-            f"{os.path.basename(self.filename)}{self.SEPARATOR}{self.filesize}".encode())
+            f"{os.path.basename(self.filename)}{self.SEPARATOR}{self.filesize}".encode(
+            )
+        )
 
-        await self.send_file()
+        self.send_file()
 
-    async def send_file(self):
+    def send_file(self):
         print("Sending File")
-        toast(self.filename)
+
+        # Show toast
+        self.file_name_toast()
+
         self.sent = 0
         with open(self.filename, "rb") as f:
             while True:
@@ -45,7 +51,9 @@ class Client:
                 self.skt.sendall(bytes_read)
 
                 self.sent += len(bytes_read)
-                await self.update_progress(self.sent)
+
+                # update progress
+                self.update_progress(self.sent)
 
         self.skt.close()
         print("Done")
@@ -55,9 +63,18 @@ class Client:
             filessent = str(int(filessent) + 1)
             shef_file['files_sent'] = filessent
 
+        self.change_files_sent_text(filessent)
+
+    @mainthread
+    def file_name_toast(self):
+        toast(self.filename)
+
+    @mainthread
+    def change_files_sent_text(self, filessent):
         self.files_sent.secondary_text = '[b]Files Sent:[/b]' + filessent
 
-    async def update_progress(self, bytes_len):
+    @mainthread
+    def update_progress(self, bytes_len):
         '''update the progress bar in the UI'''
         bar_value = int((bytes_len/self.filesize)*100)
         self.progressbar.value = bar_value
