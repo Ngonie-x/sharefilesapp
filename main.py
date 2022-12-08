@@ -2,12 +2,10 @@ import shelve
 import server
 import client
 import socket
-import asyncio
 import threading
 from kivymd.app import MDApp
 from kivymd.uix.boxlayout import MDBoxLayout
 from kivymd.uix.dialog import MDDialog
-# from kivymd.uix.button import MDFlatButton, MDRectangleFlatButton
 from kivymd.toast import toast
 from kivy.core.window import Window
 from kivymd.uix.filemanager import MDFileManager
@@ -16,15 +14,22 @@ from kivy.utils import platform
 
 
 if platform == 'android':
+    import android
 
     # Android settings
     from android.storage import primary_external_storage_path
     primary_ext_storage = primary_external_storage_path()
 
-    import android
     from android.permissions import request_permissions, Permission
-    request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE,
-                        Permission.ACCESS_NETWORK_STATE, Permission.INTERNET])
+
+    request_permissions(
+        [
+            Permission.WRITE_EXTERNAL_STORAGE,
+            Permission.READ_EXTERNAL_STORAGE,
+            Permission.ACCESS_NETWORK_STATE,
+            Permission.INTERNET
+        ]
+    )
 
 else:
     primary_ext_storage = os.getcwd()
@@ -59,15 +64,14 @@ class MainApp(MDApp):
         self.dialog = None
 
     def on_start(self):
-        # hostname = socket.gethostname()
-        # myipaddress = socket.gethostbyname(hostname)
-        # self.root.ids.ipaddress.secondary_text = myipaddress
         self.root.ids.ipaddress.secondary_text = self.get_ip()
-        try:
+
+        # Create these directories if they don't exist
+        if not os.path.exists('./save_files'):
             os.mkdir('save_files')
 
-        except Exception:
-            pass
+        if not os.path.exists('./received_files'):
+            os.mkdir('received_files')
 
         try:
             with shelve.open('./save_files/mydata') as shelf_file:
@@ -86,14 +90,12 @@ class MainApp(MDApp):
             # doesn't have to be reachable
             s.connect(('10.255.255.255', 1))
             IP = s.getsockname()[0]
-        except Exception:
+        except Exception as e:
             IP = '127.0.0.1'
+            print(e)
         finally:
             s.close()
         return IP
-
-        # hostname = socket.getfqdn()
-        # myipaddress = socket.gethostbyname(hostname)
 
     def build(self):
         self.theme_cls.primary_palette = "DeepPurple"
@@ -110,20 +112,20 @@ class MainApp(MDApp):
         except Exception as e:
             toast(e)
 
-    # def on_quit(self):
-        # with shelve.open('./save_files/mydata') as shelf_file:
-        #     shelf_file['files_sent'] = self.root.ids.details_item.secondary_text.text
-        #     shelf_file['files_received'] = self.root.ids.details_item.tertiary_text.text
+    def on_quit(self):
+        with shelve.open('./save_files/mydata') as shelf_file:
+            shelf_file['files_sent'] = self.root.ids.details_item.secondary_text.text
+            shelf_file['files_received'] = self.root.ids.details_item.tertiary_text.text
 
-        # try:
-        #     self.new_server.skt.close()
-        # except Exception as e:
-        #     try:
-        #         print(e)
-        #         self.new_client.skt.close()
-        #     except Exception as e:
-        #         print(e)
-        #         pass
+        try:
+            self.new_server.skt.close()
+        except Exception as e:
+            try:
+                print(e)
+                self.new_client.skt.close()
+            except Exception as e:
+                print(e)
+                pass
 
     #------------------Dialog box-----------------#
 

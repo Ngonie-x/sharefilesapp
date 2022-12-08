@@ -8,14 +8,20 @@ from kivy.utils import platform
 from kivy.clock import mainthread
 
 if platform == 'android':
+    import android
 
     from android.storage import secondary_external_storage_path
     secondary_ext_storage = secondary_external_storage_path()
 
-    import android
     from android.permissions import request_permissions, Permission
-    request_permissions([Permission.WRITE_EXTERNAL_STORAGE, Permission.READ_EXTERNAL_STORAGE,
-                        Permission.ACCESS_NETWORK_STATE, Permission.INTERNET])
+    request_permissions(
+        [
+            Permission.WRITE_EXTERNAL_STORAGE,
+            Permission.READ_EXTERNAL_STORAGE,
+            Permission.ACCESS_NETWORK_STATE,
+            Permission.INTERNET
+        ]
+    )
 
 else:
     secondary_ext_storage = os.getcwd()
